@@ -10,11 +10,34 @@ import {
   useEdgesState,
   addEdge,
   useReactFlow,
-  Panel
+  Panel,
+  Node,
+  ReactFlowInstance,
+  BackgroundVariant,
+  Connection,
+  Edge,
+  NodeMouseHandler,
+  OnNodesChange,
+  OnEdgesChange,
+  OnInit
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import genericLLMNode from './genericLLMNode';
 
+interface CustomNodeData extends Record<string, unknown> {
+  label: string;
+  agent_id: string;
+  agent_name: string;
+  jb_asr: string;
+}
+
+interface CustomEdgeData extends Record<string, unknown> {
+  from_memory: string;
+  memory_index: string | number;
+}
+
+type CustomNode = Node<CustomNodeData>;
+type CustomEdge = Edge<CustomEdgeData>;
 
 const flowKey = 'example-flow';
 
@@ -30,13 +53,20 @@ let id = 3;
 const getId = () => `${id++}`;
 
 function Flow() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<CustomNode>(initialNodes as CustomNode[]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdge>(initialEdges as CustomEdge[]);
   const [nodeType, setNodeType] = useState('agent');
   const { screenToFlowPosition } = useReactFlow();
-  const [rfInstance, setRfInstance] = useState(null);
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance<CustomNode, CustomEdge> | null>(null);
+  const [selectedNode, setSelectedNode] = useState<CustomNode | null>(null);
 
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+  const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
+    setSelectedNode(node as unknown as CustomNode);
+  }, []);
+
+  const onConnect = useCallback((params: Connection) => {
+    setEdges((eds) => addEdge(params, eds) as CustomEdge[]);
+  }, [setEdges]);
 
   const onConnectEnd = useCallback(
     (event, connectionState) => {
@@ -49,18 +79,39 @@ function Flow() {
       const { clientX, clientY } =
         'changedTouches' in event ? event.changedTouches[0] : event;
 
-      const newNode = {
+      const newNode: CustomNode = {
         id: getId(),
         position: screenToFlowPosition({ x: clientX, y: clientY }),
-        data: { label: `${nodeType.charAt(0).toUpperCase() + nodeType.slice(1)} Node` },
+        data: { 
+          label: `${nodeType.charAt(0).toUpperCase() + nodeType.slice(1)} Node`,
+          agent_id: '0',
+          agent_name: 'New Agent',
+          jb_asr: '0'
+        },
         type: nodeType,
       };
 
       setNodes((nds) => nds.concat(newNode));
 
-      const newEdge = connectionState.fromHandle.type === 'target'
-        ? { id: `e${newNode.id}-${fromNode.id}`, source: newNode.id, target: fromNode.id }
-        : { id: `e${fromNode.id}-${newNode.id}`, source: fromNode.id, target: newNode.id };
+      const newEdge: CustomEdge = connectionState.fromHandle.type === 'target'
+        ? { 
+            id: `e${newNode.id}-${fromNode.id}`, 
+            source: newNode.id, 
+            target: fromNode.id,
+            data: {
+              from_memory: 'False',
+              memory_index: 'None'
+            }
+          }
+        : { 
+            id: `e${fromNode.id}-${newNode.id}`, 
+            source: fromNode.id, 
+            target: newNode.id,
+            data: {
+              from_memory: 'False',
+              memory_index: 'None'
+            }
+          };
 
       setEdges((eds) => eds.concat(newEdge));
     },
@@ -76,28 +127,51 @@ function Flow() {
   }, [rfInstance]);
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
-
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onInit={setRfInstance}
-        onConnectEnd={onConnectEnd}
-        fitView
-        nodeTypes={{ llm_call_node: genericLLMNode}} // Register custom node type
-        style={{ backgroundColor: '#F7F9FB' }}
-      >
-        <Controls />
-        <MiniMap />
-        <Background variant="dots" gap={12} size={1} />
-
-        {/* <Panel position="top-right">
-          <button onClick={onSave}>save</button>
-        </Panel> */}
-      </ReactFlow>
+    <div style={{ width: '100vw', height: '100vh', display: 'flex' }}>
+      <div style={{ flex: 1, height: '100%' }}>
+        <ReactFlow<CustomNode, CustomEdge>
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onInit={setRfInstance}
+          onConnectEnd={onConnectEnd}
+          onNodeClick={onNodeClick}
+          fitView
+          nodeTypes={{ llm_call_node: genericLLMNode}}
+          style={{ backgroundColor: '#F7F9FB' }}
+        >
+          <Controls />
+          <MiniMap />
+          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        </ReactFlow>
+      </div>
+      
+      <div style={{ 
+        width: '300px', 
+        height: '100%', 
+        backgroundColor: 'white',
+        borderLeft: '1px solid #eee',
+        padding: '20px',
+        overflowY: 'auto'
+      }}>
+        {selectedNode ? (
+          <div>
+            <h3>Node Details</h3>
+            <p><strong>ID:</strong> {selectedNode.id}</p>
+            <p><strong>Label:</strong> {selectedNode.data.label}</p>
+            <p><strong>Agent ID:</strong> {selectedNode.data.agent_id}</p>
+            <p><strong>Agent Name:</strong> {selectedNode.data.agent_name}</p>
+            <p><strong>JB ASR:</strong> {selectedNode.data.jb_asr}</p>
+          </div>
+        ) : (
+          <div>
+            <h3>No Node Selected</h3>
+            <p>Click on a node to view its details</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

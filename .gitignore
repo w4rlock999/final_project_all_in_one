@@ -64,3 +64,8 @@ logs/
 
 node_modules/
 **/node_modules/
+
+./trust_agent_evaluator/agentvis/.next/
+**/.next/
+**/.swc/
+.*.env
