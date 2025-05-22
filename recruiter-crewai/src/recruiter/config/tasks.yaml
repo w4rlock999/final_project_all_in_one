@@ -1,0 +1,102 @@
+cv_analysis_task:
+  description: >
+    Analyze the candidate's CV on its own, without any context of the job description or job opening.
+    Make sure you find any interesting and relevant information given the current year is {current_year}.
+    Identify the candidate's skills, experience, strength, weaknesses, and any other relevant information.
+    CV file: {path_to_cv}
+  expected_output: >
+    A report, NOT JSON, with sections for 
+    1. summary of the candidate
+    2. candidate's skills
+    3. experience
+    4. strength
+    5. weaknesses
+    6. other relevant information both good or bad information (if any)
+
+job_description_analysis_task:
+  description: >
+    Analyze the job description and job opening.
+    Make sure you find any interesting and relevant information.
+    You are very confident about your ability, only use websearch when you need INFORMATION (NOT GUIDANCE) about the organization, the technology or terminology in the job description.    
+
+    Identify the job's requirements: skills, experience, education background, education level, other relevant requirements.  
+    Job desc file: {path_to_job_desc}
+  expected_output: >
+    A report, NOT JSON, with sections for 
+    1. detailed summary of the job
+    2. description of required skills
+    3. description of required experience level
+    4. description of required education background and level
+    6. other relevant requirement (if any)
+
+job_profile_creation_task:
+  description: >
+    Create a job profile for the job description and job opening.
+    You are very confident about your ability, only use websearch when you need INFORMATION (NOT GUIDANCE) about the organization, the technology or terminology in the job description.    
+
+    Job desc file: {path_to_job_desc}
+  expected_output: >
+    A detailed job profile describing a strong candidate for the job, NOT JSON.
+
+recruitment_scoring_builder:
+  description: >
+    Build relevant scoring criteria for the job description and job profile, to be used to evaluate candidates for the job.
+    Build the scoring criteria based on the job profile and job description file.
+
+    Job desc file: {path_to_job_desc}
+
+  expected_output: >
+    A scoring criteria for the job description and job profile, NOT JSON.
+
+candidate_fitness_analysis_task:
+  description: >
+    Analyse candidate fitness from CV analysis, job description analysis, and job profile.
+    More information can be extracted from the CV and job description.
+    You are very confident about your ability, only use websearch when you need INFORMATION (NOT GUIDANCE) about the organization, the technology or terminology in the job description.    
+    
+
+    CV file: {path_to_cv}    
+
+    Job desc file: {path_to_job_desc}
+
+  expected_output: >
+    A detailed analysis of the candidate's fitness for the job, NOT JSON.
+
+candidate_fitness_scoring_and_decision_task:
+  description: >
+    Score the candidate's fitness for the job based on the scoring criteria and candidate fitness analysis.
+    More information can be extracted from the CV, job description.
+
+    You do not need and will not be allowed to use websearch for this task.
+    Make a decision whether the candidate is a fit for the job or not.
+
+    CV file: {path_to_cv}    
+
+    Job desc file: {path_to_job_desc}
+
+  expected_output: >
+    A score for the candidate's fitness for the job, NOT JSON.
+    A decision whether the candidate is a fit for the job or not, and to move to the next step or not.
+
+candidate_email_communication_task:
+  description: >
+    Write a follow up email for the hiring process, whether the candidate is a fit or not.
+    Then send an email to the candidate to inform them about the next steps in the hiring process.
+    Email address should be in the CV.
+
+    CV file: {path_to_cv}    
+
+    Job desc file: {path_to_job_desc}
+
+  expected_output: >
+    A confirmation email to the candidate.
+    If a candidate is a fit, send them an email to schedule an interview.
+    If a candidate is not a fit, send them an email to thank them for their time and effort.
+
+
+
+
+
+
+
+
