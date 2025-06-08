@@ -23,6 +23,8 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import genericLLMNode from './genericLLMNode';
+import AgentNode from './agentNode';
+import MemoryNode from './memoryNode';
 import RightPanel from './RightPanel';
 
 interface CustomNodeData extends Record<string, unknown> {
@@ -56,6 +58,8 @@ function Flow() {
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance<CustomNode, CustomEdge> | null>(null);
   const [selectedNode, setSelectedNode] = useState<CustomNode | null>(null);
   const [rightPanelWidth, setRightPanelWidth] = useState(300);
+  const [isArchitectureView, setIsArchitectureView] = useState(false);
+  const [architectureData, setArchitectureData] = useState<{nodes: any[], edges: any[]} | null>(null);
 
   const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
     setSelectedNode(node as unknown as CustomNode);
@@ -66,7 +70,7 @@ function Flow() {
   }, [setEdges]);
 
   const onConnectEnd = useCallback(
-    (event, connectionState) => {
+    (event: any, connectionState: any) => {
       if (!connectionState || !connectionState.fromNode) return;
 
       const { fromNode, toNode } = connectionState;
@@ -123,6 +127,38 @@ function Flow() {
     }
   }, [rfInstance]);
 
+  const loadArchitectureData = useCallback(async () => {
+    try {
+      const response = await fetch('/architecture_reactflow_graph.json');
+      const data = await response.json();
+      setArchitectureData(data);
+      return data;
+    } catch (error) {
+      console.error('Failed to load architecture data:', error);
+      return null;
+    }
+  }, []);
+
+  const toggleView = useCallback(async () => {
+    if (!isArchitectureView) {
+      // Switching to architecture view
+      let data = architectureData;
+      if (!data) {
+        data = await loadArchitectureData();
+      }
+      if (data) {
+        setNodes(data.nodes);
+        setEdges(data.edges);
+        setIsArchitectureView(true);
+      }
+    } else {
+      // Switching back to original view
+      setNodes(initialNodes as CustomNode[]);
+      setEdges(initialEdges as CustomEdge[]);
+      setIsArchitectureView(false);
+    }
+  }, [isArchitectureView, architectureData, loadArchitectureData, setNodes, setEdges]);
+
   return (
     <div style={{ width: '100vw', height: '100vh', display: 'flex' }}>
       <div style={{ flex: 1, height: '100%' }}>
@@ -136,12 +172,33 @@ function Flow() {
           onConnectEnd={onConnectEnd}
           onNodeClick={onNodeClick}
           fitView
-          nodeTypes={{ llm_call_node: genericLLMNode}}
+          nodeTypes={{ 
+            llm_call_node: genericLLMNode,
+            agent_node: AgentNode,
+            memory_node: MemoryNode
+          }}
           style={{ backgroundColor: '#ffffff' }}
         >
           <Controls />
           <MiniMap />
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          <Panel position="top-right">
+            <button 
+              onClick={toggleView}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: isArchitectureView ? '#7b1fa2' : '#0050ff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '14px'
+              }}
+            >
+              {isArchitectureView ? 'Show LLM Calls' : 'Show Architecture'}
+            </button>
+          </Panel>
         </ReactFlow>
       </div>
       <RightPanel selectedNode={selectedNode} width={rightPanelWidth} setWidth={setRightPanelWidth} />
