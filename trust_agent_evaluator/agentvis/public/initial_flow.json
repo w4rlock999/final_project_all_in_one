@@ -812,11 +812,91 @@
         }
       },
       {
+        "id": "eagent_0-memory_0",
+        "source": "agent_0",
+        "target": "memory_0",
+        "data": {
+          "type": "memory_connection"
+        }
+      },
+      {
+        "id": "eagent_0-memory_1",
+        "source": "agent_0",
+        "target": "memory_1",
+        "data": {
+          "type": "memory_connection"
+        }
+      },
+      {
         "id": "eagent_1-tool_1",
         "source": "agent_1",
         "target": "tool_1",
         "data": {
           "type": "tool_connection"
+        }
+      },
+      {
+        "id": "eagent_1-memory_1",
+        "source": "agent_1",
+        "target": "memory_1",
+        "data": {
+          "type": "memory_connection"
+        }
+      },
+      {
+        "id": "eagent_1-memory_2",
+        "source": "agent_1",
+        "target": "memory_2",
+        "data": {
+          "type": "memory_connection"
+        }
+      },
+      {
+        "id": "eagent_0-memory_2",
+        "source": "agent_0",
+        "target": "memory_2",
+        "data": {
+          "type": "memory_connection"
+        }
+      },
+      {
+        "id": "eagent_0-memory_3",
+        "source": "agent_0",
+        "target": "memory_3",
+        "data": {
+          "type": "memory_connection"
+        }
+      },
+      {
+        "id": "eagent_0-memory_4",
+        "source": "agent_0",
+        "target": "memory_4",
+        "data": {
+          "type": "memory_connection"
+        }
+      },
+      {
+        "id": "eagent_2-memory_3",
+        "source": "agent_2",
+        "target": "memory_3",
+        "data": {
+          "type": "memory_connection"
+        }
+      },
+      {
+        "id": "eagent_2-memory_4",
+        "source": "agent_2",
+        "target": "memory_4",
+        "data": {
+          "type": "memory_connection"
+        }
+      },
+      {
+        "id": "eagent_2-memory_5",
+        "source": "agent_2",
+        "target": "memory_5",
+        "data": {
+          "type": "memory_connection"
         }
       },
       {
@@ -828,11 +908,27 @@
         }
       },
       {
+        "id": "eagent_3-memory_5",
+        "source": "agent_3",
+        "target": "memory_5",
+        "data": {
+          "type": "memory_connection"
+        }
+      },
+      {
         "id": "eagent_3-tool_2",
         "source": "agent_3",
         "target": "tool_2",
         "data": {
           "type": "tool_connection"
+        }
+      },
+      {
+        "id": "eagent_3-memory_6",
+        "source": "agent_3",
+        "target": "memory_6",
+        "data": {
+          "type": "memory_connection"
         }
       }
     ],
