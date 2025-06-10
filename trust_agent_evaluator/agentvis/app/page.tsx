@@ -69,6 +69,7 @@ function Flow() {
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
           fitView
+          minZoom={0.05}
           nodeTypes={{ 
             llm_call_node: genericLLMNode,
             agent_node: AgentNode,
