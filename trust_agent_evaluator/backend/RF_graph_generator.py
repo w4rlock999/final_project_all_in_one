@@ -85,12 +85,14 @@ class ReactFlowGenerator:
         """
         Generate ReactFlow compatible format for component graph
         Creates nodes for agents, memory, and tools from the components section
+        Creates edges between agents and tools (agent always as source, tool always as target)
         
         Returns:
             dict: ReactFlow compatible graph data
         """
         nodes = []
         edges = []
+        processed_edges = set()  # Keep track of processed tool-agent connections
         
         # Get agents, memory, and tools from the components section
         agents_data = self.graph.get('components', {}).get('agents', [])
@@ -151,5 +153,24 @@ class ReactFlowGenerator:
                 "type": "tool_node"
             }
             nodes.append(tool_node)
+        
+        # Create edges between agents and tools (agent always as source, tool always as target)
+        for node in self.graph.get('nodes', []):
+            agent_index = node.get('agent_index')
+            if agent_index is not None:
+                # Combine both tool inputs and outputs to create edges
+                all_tools = set(node.get('tool_in_input', []) + node.get('tool_in_output', []))
+                for tool_index in all_tools:
+                    edge_key = f"agent_{agent_index}-tool_{tool_index}"
+                    if edge_key not in processed_edges:
+                        edges.append({
+                            "id": f"e{edge_key}",
+                            "source": f"agent_{agent_index}",
+                            "target": f"tool_{tool_index}",
+                            "data": {
+                                "type": "tool_connection"
+                            }
+                        })
+                        processed_edges.add(edge_key)
         
         return nodes, edges

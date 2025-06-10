@@ -802,7 +802,40 @@
         "type": "tool_node"
       }
     ],
-    "edges": [],
+    "edges": [
+      {
+        "id": "eagent_0-tool_1",
+        "source": "agent_0",
+        "target": "tool_1",
+        "data": {
+          "type": "tool_connection"
+        }
+      },
+      {
+        "id": "eagent_1-tool_1",
+        "source": "agent_1",
+        "target": "tool_1",
+        "data": {
+          "type": "tool_connection"
+        }
+      },
+      {
+        "id": "eagent_3-tool_1",
+        "source": "agent_3",
+        "target": "tool_1",
+        "data": {
+          "type": "tool_connection"
+        }
+      },
+      {
+        "id": "eagent_3-tool_2",
+        "source": "agent_3",
+        "target": "tool_2",
+        "data": {
+          "type": "tool_connection"
+        }
+      }
+    ],
     "viewport": {
       "x": 0,
       "y": 0,
