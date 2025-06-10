@@ -3,11 +3,9 @@ import { Handle, Position } from '@xyflow/react';
 import './agentNode.css';
 
 interface AgentNodeData {
-  label: string;
+  agent_id: string;
   agent_name: string;
-  backstory?: string;
-  goal?: string;
-  model?: string;
+  label: string;
 }
 
 interface AgentNodeProps {
@@ -25,24 +23,11 @@ const AgentNode = ({ data, isConnectable }: AgentNodeProps) => {
       />
       <div className="agent-node">
         <div className="agent-node-header">
-          <div className="agent-node-icon">🤖</div>
-          <span className="agent-node-title">{data.label}</span>
+          <span className="agent-node-label">{data.label}</span>
         </div>
-        {data.model && (
-          <div className="agent-node-row">Model: {data.model}</div>
-        )}
-        {data.backstory && (
-          <div className="agent-node-backstory">
-            <strong>Backstory:</strong>
-            <p>{data.backstory}</p>
-          </div>
-        )}
-        {data.goal && (
-          <div className="agent-node-goal">
-            <strong>Goal:</strong>
-            <p>{data.goal}</p>
-          </div>
-        )}
+        <div className="agent-node-content">
+          <span className="agent-node-name">{data.agent_name}</span>
+        </div>
       </div>
       <Handle
         type="source"

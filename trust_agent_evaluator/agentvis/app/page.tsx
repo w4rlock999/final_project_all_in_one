@@ -25,6 +25,7 @@ import '@xyflow/react/dist/style.css';
 import genericLLMNode from './genericLLMNode';
 import AgentNode from './agentNode';
 import MemoryNode from './memoryNode';
+import ToolNode from './toolNode';
 import RightPanel from './RightPanel';
 
 const flowKey = 'example-flow';
@@ -43,8 +44,8 @@ function Flow() {
       try {
         const response = await fetch('/initial_flow.json');
         const data = await response.json();
-        setNodes(data.nodes);
-        setEdges(data.edges);
+        setNodes(data.component.nodes);
+        setEdges(data.component.edges);
       } catch (error) {
         console.error('Failed to load initial flow data:', error);
       }
@@ -71,7 +72,8 @@ function Flow() {
           nodeTypes={{ 
             llm_call_node: genericLLMNode,
             agent_node: AgentNode,
-            memory_node: MemoryNode
+            memory_node: MemoryNode,
+            tool_node: ToolNode
           }}
           style={{ backgroundColor: '#ffffff' }}
         >
