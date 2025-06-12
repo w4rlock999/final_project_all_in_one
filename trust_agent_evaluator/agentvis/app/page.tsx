@@ -41,6 +41,8 @@ function Flow() {
   const [componentEdges, setComponentEdges, onComponentEdgesChange] = useEdgesState<Edge<Record<string, unknown>>>([]);
   const [selectedNode, setSelectedNode] = useState<Node<Record<string, unknown>, string> | null>(null);
   const [rightPanelWidth, setRightPanelWidth] = useState(300);
+  const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Default width for the left panel
+  const [isDragging, setIsDragging] = useState(false);
   const [highlightedComponents, setHighlightedComponents] = useState<string[]>([]);
 
   useEffect(() => {
@@ -145,38 +147,112 @@ function Flow() {
     setHighlightedComponents([]);
   }, []);
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      const newWidth = (e.clientX / window.innerWidth) * 100;
+      setLeftPanelWidth(Math.max(20, Math.min(80, newWidth))); // Limit width between 20% and 80%
+    }
+  }, [isDragging]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
   return (
     <div style={{ width: '100vw', height: '100vh', display: 'flex' }}>
-      <div style={{ flex: 1, height: '100%' }}>
-        <ReactFlow
-          nodes={[...processNodes, ...componentNodes]}
-          edges={[...processEdges, ...componentEdges]}
-          onNodesChange={(changes) => {
-            onProcessNodesChange(changes);
-            onComponentNodesChange(changes);
-          }}
-          onEdgesChange={(changes) => {
-            onProcessEdgesChange(changes);
-            onComponentEdgesChange(changes);
-          }}
-          onNodeClick={onNodeClick}
-          onEdgeClick={onEdgeClick}
-          onPaneClick={onPaneClick}
-          fitView
-          minZoom={0.05}
-          nodeTypes={{ 
-            llm_call_node: genericLLMNode,
-            agent_node: AgentNode,
-            memory_node: MemoryNode,
-            tool_node: ToolNode
-          }}
-          style={{ backgroundColor: '#ffffff' }}
-        >
-          <Controls />
-          <MiniMap />
-          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-        </ReactFlow>
-      </div>
+      <ReactFlowProvider>
+        <div style={{ width: `${leftPanelWidth}%`, height: '100%', position: 'relative' }}>
+          <ReactFlow
+            nodes={[...componentNodes]}
+            edges={[...componentEdges]}
+            onNodesChange={(changes) => {
+              onProcessNodesChange(changes);
+              onComponentNodesChange(changes);
+            }}
+            onEdgesChange={(changes) => {
+              onProcessEdgesChange(changes);
+              onComponentEdgesChange(changes);
+            }}
+            onNodeClick={onNodeClick}
+            onEdgeClick={onEdgeClick}
+            onPaneClick={onPaneClick}
+            fitView
+            minZoom={0.05}
+            nodeTypes={{ 
+              llm_call_node: genericLLMNode,
+              agent_node: AgentNode,
+              memory_node: MemoryNode,
+              tool_node: ToolNode
+            }}
+            style={{ backgroundColor: '#ffffff' }}
+          >
+            <Controls />
+            <MiniMap />
+            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          </ReactFlow>
+        </div>
+      </ReactFlowProvider>
+
+      <div
+        style={{
+          width: '4px',
+          height: '100%',
+          backgroundColor: '#ccc',
+          cursor: 'col-resize',
+          position: 'relative',
+          zIndex: 10,
+        }}
+        onMouseDown={handleMouseDown}
+      />
+
+      <ReactFlowProvider>
+        <div style={{ width: `${100 - leftPanelWidth}%`, height: '100%' }}>
+          <ReactFlow
+            nodes={[...processNodes]}
+            edges={[...processEdges]}
+            onNodesChange={(changes) => {
+              onProcessNodesChange(changes);
+              onComponentNodesChange(changes);
+            }}
+            onEdgesChange={(changes) => {
+              onProcessEdgesChange(changes);
+              onComponentEdgesChange(changes);
+            }}
+            onNodeClick={onNodeClick}
+            onEdgeClick={onEdgeClick}
+            onPaneClick={onPaneClick}
+            fitView
+            minZoom={0.05}
+            nodeTypes={{ 
+              llm_call_node: genericLLMNode,
+              agent_node: AgentNode,
+              memory_node: MemoryNode,
+              tool_node: ToolNode
+            }}
+            style={{ backgroundColor: '#ffffff' }}
+          >
+            <Controls />
+            <MiniMap />
+            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          </ReactFlow>
+        </div>
+      </ReactFlowProvider>
       <RightPanel selectedNode={selectedNode} width={rightPanelWidth} setWidth={setRightPanelWidth} />
     </div>
   );
