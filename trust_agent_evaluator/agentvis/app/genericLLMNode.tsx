@@ -33,7 +33,7 @@ const GenericLLMNode = ({ data, isConnectable }: GenericLLMNodeProps) => {
       <div className="generic-llm-node">
         <div className="generic-llm-node-header">
           <div className="generic-llm-node-icon" />
-          <span className="generic-llm-node-title">{data.label}</span>
+          <span className="generic-llm-node-title">{data.label.toUpperCase()}</span>
         </div>
         <div className="generic-llm-node-row">Model: {data.model}</div>
         <div className="generic-llm-node-row">Agent ID: {data.agent_id}</div>

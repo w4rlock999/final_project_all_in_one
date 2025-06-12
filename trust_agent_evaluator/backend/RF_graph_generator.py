@@ -26,13 +26,13 @@ class ReactFlowGenerator:
         # Convert nodes
         reactflow_nodes = [
             {
-                "id": str(node["id"]),
+                "id": f"process_{node['id']}",
                 "position": {
                     "x": (150 if (len(node["memory_in_input"]) > 0 and i % 2 == 1) else (-150 if (len(node["memory_in_input"]) > 0 and i % 2 == 0) else 0)) + 1900,
                     "y": 200 * i
                 },
                 "data": {
-                    "label": f"Node {node['id']}",
+                    "label": f"process_{node['id']}",
                     "agent_id": f"{node['agent_index']}",
                     "agent_name": f"{node['agent_name']}",
                     "jb_asr": f"{node.get('jailbreak_success_rate', '0')}",
@@ -58,8 +58,8 @@ class ReactFlowGenerator:
             if "memory_index" not in edge and edge_key not in processed_edges:
                 reactflow_edges.append({
                     "id": f"e{edge['source']}-{edge['target']}",
-                    "source": str(edge["source"]),
-                    "target": str(edge["target"]),
+                    "source": f"process_"+str(edge["source"]),
+                    "target": f"process_"+str(edge["target"]),
                     "data": {
                         "from_memory": "False",
                         "memory_index": 'None'
@@ -74,8 +74,8 @@ class ReactFlowGenerator:
             if "memory_index" in edge and edge_key not in processed_edges:
                 reactflow_edges.append({
                     "id": f"e{edge['source']}-{edge['target']}",
-                    "source": str(edge["source"]),
-                    "target": str(edge["target"]),
+                    "source": f"process_"+str(edge["source"]),
+                    "target": f"process_"+str(edge["target"]),
                     "data": {
                         "from_memory": "True",
                         "memory_index": edge["memory_index"]

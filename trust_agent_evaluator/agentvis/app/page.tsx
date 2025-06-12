@@ -59,12 +59,15 @@ function Flow() {
             ...node.style,
             opacity: highlightedComponents.length > 0 ? (highlightedComponents.includes(node.id) ? 1 : 0.1) : 1,
             transition: 'opacity 0.3s ease',
-          }
+          },
         }));
 
         // const allNodes = [...processNodes, ...componentNodes];
         
-        const processEdges = data.process.edges
+        const processEdges = data.process.edges.map(edge => ({
+          ...edge,
+          animated: selectedNode != null ? (((edge.source) === selectedNode.data.label) ? true : false) : false,
+        }));
         const componentEdges = data.component.edges.map(edge => ({
           ...edge,
           style: {
@@ -94,11 +97,30 @@ function Flow() {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const response = await fetch('/initial_flow.json');
-        const data = await response.json();
+        const processEdges_ = processEdges.map(edge => ({
+          ...edge,
+          style: {
+            ...edge.style,
+            stroke: selectedNode != null && edge.source === selectedNode.id ? '#0000FF' : '#AFAFAF',
+            strokeWidth: selectedNode != null && edge.source === selectedNode.id ? 2 : 1,
+            transition: 'stroke 0.3s ease'
+          },
+        }));
 
+        setProcessEdges(processEdges_);
+      } catch (error) {
+        console.error('Failed to load initial flow data:', error);
+      }
+    };
 
-        const componentNodes = data.component.nodes.map(node => ({
+    loadInitialData();
+  }, [selectedNode]);
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+
+        const componentNodes_ = componentNodes.map(node => ({
           ...node,
           style: {
             ...node.style,
@@ -107,7 +129,7 @@ function Flow() {
           }
         }));
 
-        const componentEdges = data.component.edges.map(edge => ({
+        const componentEdges_ = componentEdges.map(edge => ({
           ...edge,
           style: {
             ...edge.style,
@@ -119,13 +141,12 @@ function Flow() {
           animated: highlightedComponents.length > 0 ? (highlightedComponents.includes(edge.source) && highlightedComponents.includes(edge.target)) ? true : false : false,
         }));
         
-        setComponentNodes(componentNodes);
-        setComponentEdges(componentEdges);
+        setComponentNodes(componentNodes_);
+        setComponentEdges(componentEdges_);
       } catch (error) {
         console.error('Failed to load initial flow data:', error);
       }
     };
-
     loadInitialData();
   }, [highlightedComponents]);
 
@@ -133,18 +154,22 @@ function Flow() {
     if (node.type === 'llm_call_node') {
       const inputComponents = (node.data.input_components as string[]) || [];
       setHighlightedComponents(inputComponents);
+      setSelectedNode(node);
     } else {
       // Clear highlights when clicking any non-process node
       setHighlightedComponents([]);
+      setSelectedNode(null);
     }
   }, []);
 
   const onEdgeClick = useCallback(() => {
     setHighlightedComponents([]);
+    setSelectedNode(null);
   }, []);
 
   const onPaneClick = useCallback(() => {
     setHighlightedComponents([]);
+    setSelectedNode(null);
   }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
