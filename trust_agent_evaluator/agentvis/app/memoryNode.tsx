@@ -11,9 +11,10 @@ interface MemoryNodeData {
 interface MemoryNodeProps {
   data: MemoryNodeData;
   isConnectable: boolean;
+  isHighlighted?: boolean;
 }
 
-const MemoryNode = ({ data, isConnectable }: MemoryNodeProps) => {
+const MemoryNode = ({ data, isConnectable, isHighlighted }: MemoryNodeProps) => {
   const truncateContent = (content: string, maxLength: number = 100) => {
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + '...';
@@ -41,7 +42,7 @@ const MemoryNode = ({ data, isConnectable }: MemoryNodeProps) => {
         position={Position.Top}
         isConnectable={isConnectable}
       />
-      <div className="memory-node">
+      <div className={`memory-node ${isHighlighted ? 'highlighted' : ''}`}>
         <div className="memory-node-header">
           <div className="memory-node-icon">🧠</div>
           <span className="memory-node-title">{data.label}</span>

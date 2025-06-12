@@ -9,11 +9,12 @@ interface ToolNodeData {
 
 interface ToolNodeProps {
   data: ToolNodeData;
+  isHighlighted?: boolean;
 }
 
-const ToolNode = ({ data }: ToolNodeProps) => {
+const ToolNode = ({ data, isHighlighted }: ToolNodeProps) => {
   return (
-    <div className="toolNode">
+    <div className={`toolNode ${isHighlighted ? 'highlighted' : ''}`}>
       <Handle type="target" position={Position.Top} className="handle"/>
       <div className="toolContent">
         <div className="toolIcon">

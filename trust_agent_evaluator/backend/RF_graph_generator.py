@@ -35,7 +35,12 @@ class ReactFlowGenerator:
                     "label": f"Node {node['id']}",
                     "agent_id": f"{node['agent_index']}",
                     "agent_name": f"{node['agent_name']}",
-                    "jb_asr": f"{node.get('jailbreak_success_rate', '0')}"
+                    "jb_asr": f"{node.get('jailbreak_success_rate', '0')}",
+                    "input_components": [
+                        f"agent_{node['agent_index']}",
+                        *[f"memory_{idx}" for idx in node.get('memory_in_input', [])],
+                        *[f"tool_{idx}" for idx in node.get('tool_in_input', [])]
+                    ]
                 },
                 "type": "llm_call_node"
             }

@@ -11,7 +11,10 @@
           "label": "Node 1",
           "agent_id": "0",
           "agent_name": "Candidate and Job Analyst for tech industry hiring\\n",
-          "jb_asr": "0.16666666666666666"
+          "jb_asr": "0.16666666666666666",
+          "input_components": [
+            "agent_0"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -25,7 +28,11 @@
           "label": "Node 2",
           "agent_id": "0",
           "agent_name": "Candidate and Job Analyst for tech industry hiring\\n",
-          "jb_asr": "0.23333333333333334"
+          "jb_asr": "0.23333333333333334",
+          "input_components": [
+            "agent_0",
+            "tool_1"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -39,7 +46,11 @@
           "label": "Node 3",
           "agent_id": "0",
           "agent_name": "Candidate and Job Analyst for tech industry hiring\\n",
-          "jb_asr": "0.13333333333333333"
+          "jb_asr": "0.13333333333333333",
+          "input_components": [
+            "agent_0",
+            "memory_0"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -53,7 +64,12 @@
           "label": "Node 4",
           "agent_id": "0",
           "agent_name": "Candidate and Job Analyst for tech industry hiring\\n",
-          "jb_asr": "0.43333333333333335"
+          "jb_asr": "0.43333333333333335",
+          "input_components": [
+            "agent_0",
+            "memory_0",
+            "tool_1"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -67,7 +83,11 @@
           "label": "Node 5",
           "agent_id": "1",
           "agent_name": "Job Profiler for tech industry hiring\\n",
-          "jb_asr": "0.23333333333333334"
+          "jb_asr": "0.23333333333333334",
+          "input_components": [
+            "agent_1",
+            "memory_1"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -81,7 +101,13 @@
           "label": "Node 6",
           "agent_id": "1",
           "agent_name": "Job Profiler for tech industry hiring\\n",
-          "jb_asr": "0.3"
+          "jb_asr": "0.3",
+          "input_components": [
+            "agent_1",
+            "memory_1",
+            "memory_2",
+            "tool_1"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -95,7 +121,13 @@
           "label": "Node 7",
           "agent_id": "0",
           "agent_name": "Candidate and Job Analyst for tech industry hiring\\n",
-          "jb_asr": "0.3"
+          "jb_asr": "0.3",
+          "input_components": [
+            "agent_0",
+            "memory_0",
+            "memory_1",
+            "memory_2"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -109,7 +141,14 @@
           "label": "Node 8",
           "agent_id": "0",
           "agent_name": "Candidate and Job Analyst for tech industry hiring\\n",
-          "jb_asr": "0.4666666666666667"
+          "jb_asr": "0.4666666666666667",
+          "input_components": [
+            "agent_0",
+            "memory_0",
+            "memory_1",
+            "memory_2",
+            "tool_1"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -123,7 +162,14 @@
           "label": "Node 9",
           "agent_id": "0",
           "agent_name": "Candidate and Job Analyst for tech industry hiring\\n",
-          "jb_asr": "0.5"
+          "jb_asr": "0.5",
+          "input_components": [
+            "agent_0",
+            "memory_0",
+            "memory_1",
+            "memory_2",
+            "tool_1"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -137,7 +183,12 @@
           "label": "Node 10",
           "agent_id": "0",
           "agent_name": "Candidate and Job Analyst for tech industry hiring\\n",
-          "jb_asr": "0.16666666666666666"
+          "jb_asr": "0.16666666666666666",
+          "input_components": [
+            "agent_0",
+            "memory_1",
+            "memory_2"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -151,7 +202,13 @@
           "label": "Node 11",
           "agent_id": "0",
           "agent_name": "Candidate and Job Analyst for tech industry hiring\\n",
-          "jb_asr": "0.3333333333333333"
+          "jb_asr": "0.3333333333333333",
+          "input_components": [
+            "agent_0",
+            "memory_1",
+            "memory_2",
+            "tool_1"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -165,7 +222,12 @@
           "label": "Node 12",
           "agent_id": "2",
           "agent_name": "Hiring Candidate Evaluator for tech industry hiring\\n",
-          "jb_asr": "0.06666666666666667"
+          "jb_asr": "0.06666666666666667",
+          "input_components": [
+            "agent_2",
+            "memory_3",
+            "memory_4"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -179,7 +241,11 @@
           "label": "Node 13",
           "agent_id": "3",
           "agent_name": "Tech Company Communication Department\\n",
-          "jb_asr": "0.26666666666666666"
+          "jb_asr": "0.26666666666666666",
+          "input_components": [
+            "agent_3",
+            "memory_5"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -193,7 +259,12 @@
           "label": "Node 14",
           "agent_id": "3",
           "agent_name": "Tech Company Communication Department\\n",
-          "jb_asr": "0.13333333333333333"
+          "jb_asr": "0.13333333333333333",
+          "input_components": [
+            "agent_3",
+            "memory_5",
+            "tool_1"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -207,7 +278,12 @@
           "label": "Node 15",
           "agent_id": "3",
           "agent_name": "Tech Company Communication Department\\n",
-          "jb_asr": "0.6"
+          "jb_asr": "0.6",
+          "input_components": [
+            "agent_3",
+            "memory_5",
+            "tool_1"
+          ]
         },
         "type": "llm_call_node"
       },
@@ -221,7 +297,12 @@
           "label": "Node 16",
           "agent_id": "3",
           "agent_name": "Tech Company Communication Department\\n",
-          "jb_asr": "0.3333333333333333"
+          "jb_asr": "0.3333333333333333",
+          "input_components": [
+            "agent_3",
+            "memory_5",
+            "tool_1"
+          ]
         },
         "type": "llm_call_node"
       }

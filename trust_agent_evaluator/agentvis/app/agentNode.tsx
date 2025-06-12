@@ -11,9 +11,10 @@ interface AgentNodeData {
 interface AgentNodeProps {
   data: AgentNodeData;
   isConnectable: boolean;
+  isHighlighted?: boolean;
 }
 
-const AgentNode = ({ data, isConnectable }: AgentNodeProps) => {
+const AgentNode = ({ data, isConnectable, isHighlighted }: AgentNodeProps) => {
   return (
     <>
       <Handle
@@ -21,7 +22,7 @@ const AgentNode = ({ data, isConnectable }: AgentNodeProps) => {
         position={Position.Top}
         isConnectable={isConnectable}
       />
-      <div className="agent-node">
+      <div className={`agent-node ${isHighlighted ? 'highlighted' : ''}`}>
         <div className="agent-node-header">
           <span className="agent-node-label">{data.label}</span>
         </div>
@@ -38,4 +39,4 @@ const AgentNode = ({ data, isConnectable }: AgentNodeProps) => {
   );
 };
 
-export default memo(AgentNode); 
+export default memo(AgentNode);
