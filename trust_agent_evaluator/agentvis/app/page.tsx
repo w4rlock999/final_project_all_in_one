@@ -97,17 +97,48 @@ function Flow() {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
+        // Get target nodes of edges that have selectedNode as source
+        const targetNodeIds = processEdges
+          .filter(edge => edge.source === selectedNode?.id)
+          .map(edge => edge.target);
+
+        // Create set of active nodes (selected node + target nodes)
+        const activeNodeIds = new Set([selectedNode?.id, ...targetNodeIds]);
+
+        // Update process nodes with opacity changes
+        setProcessNodes(nodes => nodes.map(node => ({
+          ...node,
+          style: {
+            ...node.style,
+            opacity: selectedNode ? (activeNodeIds.has(node.id) ? 1 : 0.3) : 1,
+            transition: 'opacity 0.3s ease',
+          },
+        })));
+
+        // Update process edges with opacity changes
+        // setProcessEdges(edges => edges.map(edge => ({
+        //   ...edge,
+        //   style: {
+        //     ...edge.style,
+        //     stroke: selectedNode != null && edge.source === selectedNode.id ? '#0000FF' : '#AFAFAF',
+        //     strokeWidth: selectedNode != null && edge.source === selectedNode.id ? 2 : 1,
+        //     opacity: selectedNode ? (edge.source === selectedNode.id ? 1 : 0.3) : 1,
+        //     transition: 'all 0.3s ease'
+        //   },
+        // })));
         const processEdges_ = processEdges.map(edge => ({
           ...edge,
           style: {
             ...edge.style,
             stroke: selectedNode != null && edge.source === selectedNode.id ? '#0000FF' : '#AFAFAF',
             strokeWidth: selectedNode != null && edge.source === selectedNode.id ? 2 : 1,
+            opacity: selectedNode ? (edge.source === selectedNode.id ? 1 : 0.3) : 1,
             transition: 'stroke 0.3s ease'
           },
         }));
 
         setProcessEdges(processEdges_);
+
       } catch (error) {
         console.error('Failed to load initial flow data:', error);
       }
