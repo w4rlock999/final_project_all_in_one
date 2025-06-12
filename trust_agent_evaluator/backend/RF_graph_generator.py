@@ -28,7 +28,7 @@ class ReactFlowGenerator:
             {
                 "id": str(node["id"]),
                 "position": {
-                    "x": 150 if (len(node["memory_in_input"]) > 0 and i % 2 == 1) else (-150 if (len(node["memory_in_input"]) > 0 and i % 2 == 0) else 0),
+                    "x": (150 if (len(node["memory_in_input"]) > 0 and i % 2 == 1) else (-150 if (len(node["memory_in_input"]) > 0 and i % 2 == 0) else 0)) + 1900,
                     "y": 200 * i
                 },
                 "data": {
@@ -111,8 +111,8 @@ class ReactFlowGenerator:
             agent_node = {
                 "id": f"agent_{i}",
                 "position": {
-                    "x": 200 * i,
-                    "y": 100
+                    "x": 450 * i,
+                    "y": - 150
                 },
                 "data": {
                     "label": f"agent_{i}",
@@ -147,7 +147,7 @@ class ReactFlowGenerator:
             tool_node = {
                 "id": f"tool_{i}",
                 "position": {
-                    "x": 200 * i,
+                    "x": 300 * i,
                     "y": 300  # Position tools below agents
                 },
                 "data": {
