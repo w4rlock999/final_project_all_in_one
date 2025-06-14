@@ -186,8 +186,17 @@ function Flow() {
       const inputComponents = (node.data.input_components as string[]) || [];
       setHighlightedComponents(inputComponents);
       setSelectedNode(node);
+    } else if (node.type === 'agent_node') {
+      setHighlightedComponents([]);
+      setSelectedNode(node);
+    } else if (node.type === 'memory_node') {
+      setHighlightedComponents([]);
+      setSelectedNode(node);
+    } else if (node.type === 'tool_node') {
+      setHighlightedComponents([]);
+      setSelectedNode(node);
     } else {
-      // Clear highlights when clicking any non-process node
+      // Clear highlights when clicking any other node type
       setHighlightedComponents([]);
       setSelectedNode(null);
     }

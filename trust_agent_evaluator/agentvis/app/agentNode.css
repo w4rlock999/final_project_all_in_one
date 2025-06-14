@@ -92,5 +92,26 @@
 .agent-node.highlighted {
   border: 3px solid #ff9800;
   box-shadow: 0px 4px 16px rgba(255, 152, 0, 0.3);
+}
+
+.agent-node-row.risk {
+  font-weight: 500;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.agent-node-row.risk-blue {
+  background: #5ef3ff;
+  color: #222;
+}
+
+.agent-node-row.risk-yellow {
+  background: #ffe066;
+  color: #222;
+}
+
+.agent-node-row.risk-red {
+  background: #ff6b6b;
+  color: #fff;
 } 
 

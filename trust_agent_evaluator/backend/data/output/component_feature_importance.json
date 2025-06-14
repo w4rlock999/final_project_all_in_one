@@ -1,0 +1,60 @@
+{
+  "feature_importance": [
+    {
+      "feature": "tool_1",
+      "importance": 0.45150475844323895
+    },
+    {
+      "feature": "memory_0",
+      "importance": 0.23219882685561546
+    },
+    {
+      "feature": "memory_2",
+      "importance": 0.07693551177286276
+    },
+    {
+      "feature": "memory_1",
+      "importance": 0.06128025386664004
+    },
+    {
+      "feature": "memory_5",
+      "importance": 0.039065099297563785
+    },
+    {
+      "feature": "agent_0",
+      "importance": 0.03530594122596665
+    },
+    {
+      "feature": "agent_2",
+      "importance": 0.026802610604151535
+    },
+    {
+      "feature": "agent_3",
+      "importance": 0.02629730617651778
+    },
+    {
+      "feature": "memory_3",
+      "importance": 0.023063675879131898
+    },
+    {
+      "feature": "memory_4",
+      "importance": 0.014470319036390865
+    },
+    {
+      "feature": "agent_1",
+      "importance": 0.01307569684192025
+    },
+    {
+      "feature": "tool_0",
+      "importance": 0
+    },
+    {
+      "feature": "tool_2",
+      "importance": 0
+    },
+    {
+      "feature": "memory_6",
+      "importance": 0
+    }
+  ]
+}

@@ -14,6 +14,33 @@ class ReactFlowGenerator:
                 self.graph = json.load(f)
         else:
             self.graph = graph_data
+            
+        # Load component feature importance data
+        try:
+            with open('./data/output/component_feature_importance.json', 'r') as f:
+                self.feature_importance = json.load(f)
+        except FileNotFoundError:
+            print("Feature importance file not found")
+            self.feature_importance = {"feature_importance": []}
+
+    def _get_component_risk(self, component_type, index):
+        """
+        Get the risk (importance) value for a component from the feature importance data.
+        
+        Args:
+            component_type (str): Type of component ('agent', 'memory', or 'tool')
+            index (int): Index of the component
+            
+        Returns:
+            float: Risk value for the component, 0 if not found
+        """
+        component_id = f"{component_type}_{index}"
+        # print(self.feature_importance)
+        for feature in self.feature_importance.get("feature_importance", []):
+            # print(feature["feature"])
+            if feature["feature"] == component_id:
+                return feature["importance"]
+        return 0.0
 
     def generate_process_graph_RF(self):
         """
@@ -119,7 +146,8 @@ class ReactFlowGenerator:
                     "agent_name": agent_name,
                     "backstory": agent.get('backstory', ''),
                     "goal": agent.get('goal', ''),
-                    "model": agent.get('model', '')
+                    "model": agent.get('model', ''),
+                    "risk": self._get_component_risk('agent', i)
                 },
                 "type": "agent_node"
             }
@@ -136,7 +164,8 @@ class ReactFlowGenerator:
                 "data": {
                     "label": f"Memory {i}",
                     "memory_content": memory.get('value', '')[:100] + "..." if len(memory.get('value', '')) > 100 else memory.get('value', ''),
-                    "memory_index": i
+                    "memory_index": i,
+                    "risk": self._get_component_risk('memory', i)
                 },
                 "type": "memory_node"
             }
@@ -154,7 +183,8 @@ class ReactFlowGenerator:
                     "label": f"Tool {i}",
                     "tool_name": tool.get('name', f'Tool {i}'),
                     "description": tool.get('description', ''),
-                    "parameters": tool.get('parameters', {})
+                    "parameters": tool.get('parameters', {}),
+                    "risk": self._get_component_risk('tool', i)
                 },
                 "type": "tool_node"
             }

@@ -6,6 +6,7 @@ interface AgentNodeData {
   agent_id: string;
   agent_name: string;
   label: string;
+  risk?: number;
 }
 
 interface AgentNodeProps {
@@ -14,7 +15,16 @@ interface AgentNodeProps {
   isHighlighted?: boolean;
 }
 
+const getRiskClass = (risk: number) => {
+  if (risk < 0.3) return 'risk-blue';
+  if (risk < 0.6) return 'risk-yellow';
+  return 'risk-red';
+};
+
 const AgentNode = ({ data, isConnectable, isHighlighted }: AgentNodeProps) => {
+  const riskValue = data.risk !== undefined ? Number(data.risk).toFixed(2) : 'N/A';
+  const riskClass = data.risk !== undefined ? getRiskClass(data.risk) : '';
+  
   return (
     <>
       <Handle
@@ -28,6 +38,7 @@ const AgentNode = ({ data, isConnectable, isHighlighted }: AgentNodeProps) => {
         </div>
         <div className="agent-node-content">
           <span className="agent-node-name">{data.agent_name}</span>
+          <div className={`agent-node-row risk ${riskClass}`}>Risk: {riskValue}</div>
         </div>
       </div>
       <Handle

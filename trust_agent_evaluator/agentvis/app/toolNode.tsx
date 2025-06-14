@@ -5,6 +5,7 @@ import './toolNode.css';
 interface ToolNodeData {
   label: string;
   tool_name: string;
+  risk?: number;
 }
 
 interface ToolNodeProps {
@@ -12,7 +13,16 @@ interface ToolNodeProps {
   isHighlighted?: boolean;
 }
 
+const getRiskClass = (risk: number) => {
+  if (risk < 0.3) return 'risk-blue';
+  if (risk < 0.6) return 'risk-yellow';
+  return 'risk-red';
+};
+
 const ToolNode = ({ data, isHighlighted }: ToolNodeProps) => {
+  const riskValue = data.risk !== undefined ? Number(data.risk).toFixed(2) : 'N/A';
+  const riskClass = data.risk !== undefined ? getRiskClass(data.risk) : '';
+
   return (
     <div className={`toolNode ${isHighlighted ? 'highlighted' : ''}`}>
       <Handle type="target" position={Position.Top} className="handle"/>
@@ -41,6 +51,7 @@ const ToolNode = ({ data, isHighlighted }: ToolNodeProps) => {
         <div className="toolInfo">
           <div className="toolLabel">{data.label}</div>
           <div className="toolType">{data.tool_name}</div>
+          <div className={`toolRisk ${riskClass}`}>Risk: {riskValue}</div>
         </div>
       </div>
       <Handle type="source" position={Position.Bottom} className="handle" />
