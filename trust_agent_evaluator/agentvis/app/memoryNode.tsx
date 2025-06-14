@@ -6,14 +6,22 @@ interface MemoryNodeData {
   label: string;
   memory_content?: string;
   memory_index?: number;
+  risk?: number;
 }
 
 interface MemoryNodeProps {
   data: MemoryNodeData;
   isConnectable: boolean;
+  isHighlighted?: boolean;
 }
 
-const MemoryNode = ({ data, isConnectable }: MemoryNodeProps) => {
+const getRiskClass = (risk: number) => {
+  if (risk < 0.3) return 'risk-blue';
+  if (risk < 0.6) return 'risk-yellow';
+  return 'risk-red';
+};
+
+const MemoryNode = ({ data, isConnectable, isHighlighted }: MemoryNodeProps) => {
   const truncateContent = (content: string, maxLength: number = 100) => {
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + '...';
@@ -34,6 +42,9 @@ const MemoryNode = ({ data, isConnectable }: MemoryNodeProps) => {
     }
   };
 
+  const riskValue = data.risk !== undefined ? Number(data.risk).toFixed(2) : 'N/A';
+  const riskClass = data.risk !== undefined ? getRiskClass(data.risk) : '';
+
   return (
     <>
       <Handle
@@ -41,7 +52,7 @@ const MemoryNode = ({ data, isConnectable }: MemoryNodeProps) => {
         position={Position.Top}
         isConnectable={isConnectable}
       />
-      <div className="memory-node">
+      <div className={`memory-node ${isHighlighted ? 'highlighted' : ''}`}>
         <div className="memory-node-header">
           <div className="memory-node-icon">🧠</div>
           <span className="memory-node-title">{data.label}</span>
@@ -55,6 +66,7 @@ const MemoryNode = ({ data, isConnectable }: MemoryNodeProps) => {
             <p>{formatMemoryContent(data.memory_content)}</p>
           </div>
         )}
+        <div className={`memory-node-row risk ${riskClass}`}>Risk: {riskValue}</div>
       </div>
       <Handle
         type="source"
