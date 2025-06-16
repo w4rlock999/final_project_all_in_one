@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import './RightPanel.css';
 
 interface RightPanelProps {
@@ -48,8 +48,8 @@ interface ToolInfo {
   id: string;
 }
 
-const MIN_WIDTH = 180;
-const MAX_WIDTH = 600;
+const MIN_WIDTH = 20; // Percentage
+const MAX_WIDTH = 40; // Percentage
 
 const RightPanel: React.FC<RightPanelProps> = ({ selectedNode, width, setWidth }) => {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -58,6 +58,7 @@ const RightPanel: React.FC<RightPanelProps> = ({ selectedNode, width, setWidth }
   const [memoryInfo, setMemoryInfo] = useState<MemoryInfo | null>(null);
   const [parsedMemoryValue, setParsedMemoryValue] = useState<ParsedMemoryValue | null>(null);
   const [toolInfo, setToolInfo] = useState<ToolInfo | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const loadInfo = async () => {
@@ -140,25 +141,31 @@ const RightPanel: React.FC<RightPanelProps> = ({ selectedNode, width, setWidth }
 
   const onMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
-    const startX = e.clientX;
-    const startWidth = width;
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const newWidth = Math.min(
-        Math.max(startWidth - (moveEvent.clientX - startX), MIN_WIDTH),
-        MAX_WIDTH
-      );
-      setWidth(newWidth);
-    };
-
-    const onMouseUp = () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
+    e.preventDefault();
+    setIsDragging(true);
   };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      const newWidth = ((window.innerWidth - e.clientX) / window.innerWidth) * 100;
+      setWidth(Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth)));
+    }
+  }, [isDragging, setWidth]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   const formatJsonString = (jsonString: string) => {
     try {
@@ -173,7 +180,7 @@ const RightPanel: React.FC<RightPanelProps> = ({ selectedNode, width, setWidth }
     <div
       className="right-panel"
       ref={panelRef}
-      style={{ width }}
+      style={{ width: `${width}%` }}
     >
       <div className="right-panel-drag-handle" onMouseDown={onMouseDown} role="presentation" />
       <div className="rp-header">{selectedNode ? selectedNode.data.label : ''}</div>

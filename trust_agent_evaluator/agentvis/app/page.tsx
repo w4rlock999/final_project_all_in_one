@@ -40,7 +40,7 @@ function Flow() {
   const [componentNodes, setComponentNodes, onComponentNodesChange] = useNodesState<Node<Record<string, unknown>, string>>([]);
   const [componentEdges, setComponentEdges, onComponentEdgesChange] = useEdgesState<Edge<Record<string, unknown>>>([]);
   const [selectedNode, setSelectedNode] = useState<Node<Record<string, unknown>, string> | null>(null);
-  const [rightPanelWidth, setRightPanelWidth] = useState(300);
+  const [rightPanelWidth, setRightPanelWidth] = useState(30); // Default to 30% width
   const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Default width for the left panel
   const [isDragging, setIsDragging] = useState(false);
   const [highlightedComponents, setHighlightedComponents] = useState<string[]>([]);
@@ -287,7 +287,7 @@ function Flow() {
       />
 
       <ReactFlowProvider>
-        <div style={{ width: `${100 - leftPanelWidth}%`, height: '100%' }}>
+        <div style={{ width: `${100 - leftPanelWidth - rightPanelWidth}%`, height: '100%' }}>
           <ReactFlow
             nodes={[...processNodes]}
             edges={[...processEdges]}
