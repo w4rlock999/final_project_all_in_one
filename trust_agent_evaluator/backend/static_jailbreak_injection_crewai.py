@@ -57,13 +57,13 @@ class JailbreakInjection:
 
                 # Save results after each jailbreak attempt
                 process_jb_result = {
-                    "id": process['id'],
+                    "label": process['label'],
                     "jailbreaks": process_jailbreak_results
                 }
                 
                 # Update the results list
                 # Remove existing node results if any
-                all_results["jailbreak_results"] = [r for r in all_results["jailbreak_results"] if r["id"] != process['id']]
+                all_results["jailbreak_results"] = [r for r in all_results["jailbreak_results"] if r["label"] != process['label']]
                 all_results["jailbreak_results"].append(process_jb_result)
                 
                 # Write to file
