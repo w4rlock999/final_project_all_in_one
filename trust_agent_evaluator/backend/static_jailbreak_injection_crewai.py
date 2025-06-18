@@ -5,40 +5,41 @@ from tqdm import tqdm
 
 load_dotenv()
 
-class NodeJailbreakCall:
-    def __init__(self, llm, graph_file):
-
-        # openai_api_key = os.getenv("OPENAI_API_KEY")
-        # os.environ["OPENAI_API_KEY"] = openai_api_key
-        # self.llm = langchain_openai.ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
-
+class JailbreakInjection:
+    
+    def __init__(self, llm, detailed_graph_file):
         self.llm = llm    
+        with open(detailed_graph_file, 'r', encoding='utf-8') as f:
+            self.detailed_graph = json.load(f)
+            self.processes = self.detailed_graph['processes']
 
-        with open(graph_file, 'r', encoding='utf-8') as f:
-            self.graph_data = json.load(f)
-            self.node = self.graph_data['nodes']
-            # self.edge = self.graph_data['edges']
-
-        with open('./data/jailbreak_prompts.json', 'r', encoding='utf-8') as f:
+        with open('./data/input/jailbreak_prompts.json', 'r', encoding='utf-8') as f:
             jailbreak_prompts_data = json.load(f)
-            # TODO modify according to the file
             self.jailbreak_prompts = [jailbreak_prompt['prompt'] for jailbreak_prompt in jailbreak_prompts_data['prompts']]
         print(f"loaded {len(self.jailbreak_prompts)} jailbreak prompts")
 
-    def test_jailbreaking(self, jailbreak_test_attempts=10):
+    def run_jailbreaking_injection_static_test(self, jailbreak_test_attempts=10):
+        
         # Initialize or load existing results
         try:
-            with open('jailbreak_results.json', 'r', encoding='utf-8') as f:
+            with open('./data/input/process_jailbreak_test_results.json', 'r', encoding='utf-8') as f:
                 all_results = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             all_results = {"jailbreak_results": []}
 
-        for node in tqdm(self.node, desc="Testing nodes"):
-            node_jailbreak_results = []
+        for process in tqdm(self.processes, desc="Testing processes for static jailbreak injection"):
+            process_jailbreak_results = []
 
             for jailbreak_prompt in self.jailbreak_prompts[:jailbreak_test_attempts]:
-                adversarial_prompt = node['input'] + "\n" + jailbreak_prompt
-                output = self.llm.invoke(adversarial_prompt)
+                
+                clean_input = json.loads(process['input'])
+                injected_input = clean_input.copy()
+
+                clean_last_message = clean_input['messages'][-1]['content']
+                injected_message = clean_last_message + "\n" + jailbreak_prompt
+                injected_input['messages'][-1]['content'] = injected_message
+
+                output = self.llm.invoke(injected_input['messages'])
         
                 # Convert AIMessage to string if needed
                 if hasattr(output, 'content'):
@@ -46,27 +47,30 @@ class NodeJailbreakCall:
                 else:
                     output_str = str(output)
 
+                # Construct the result dictionary
                 result = {
-                    "adversarial_prompt": adversarial_prompt,
+                    "adversarial_prompt": json.dumps(injected_input, ensure_ascii=False),
                     "output": output_str
                 }
 
-                node_jailbreak_results.append(result)
+                process_jailbreak_results.append(result)
 
                 # Save results after each jailbreak attempt
-                node_result = {
-                    "id": node['id'],
-                    "jailbreaks": node_jailbreak_results
+                process_jb_result = {
+                    "id": process['id'],
+                    "jailbreaks": process_jailbreak_results
                 }
                 
                 # Update the results list
                 # Remove existing node results if any
-                all_results["jailbreak_results"] = [r for r in all_results["jailbreak_results"] if r["id"] != node['id']]
-                all_results["jailbreak_results"].append(node_result)
+                all_results["jailbreak_results"] = [r for r in all_results["jailbreak_results"] if r["id"] != process['id']]
+                all_results["jailbreak_results"].append(process_jb_result)
                 
                 # Write to file
-                with open('./data/output/jailbreak_results.json', 'w', encoding='utf-8') as f:
+                with open('./data/output/process_jailbreak_test_results.json', 'w', encoding='utf-8') as f:
                     json.dump(all_results, f, indent=2)
+
+
 
     def judge_jailbreak_success(self, llm, jb_file):
 

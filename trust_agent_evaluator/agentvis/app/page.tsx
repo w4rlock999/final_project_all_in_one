@@ -40,7 +40,7 @@ function Flow() {
   const [componentNodes, setComponentNodes, onComponentNodesChange] = useNodesState<Node<Record<string, unknown>, string>>([]);
   const [componentEdges, setComponentEdges, onComponentEdgesChange] = useEdgesState<Edge<Record<string, unknown>>>([]);
   const [selectedNode, setSelectedNode] = useState<Node<Record<string, unknown>, string> | null>(null);
-  const [rightPanelWidth, setRightPanelWidth] = useState(30); // Default to 30% width
+  const [rightPanelWidth, setRightPanelWidth] = useState(20); // Default to 20% width (minimum)
   const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Default width for the left panel
   const [isDragging, setIsDragging] = useState(false);
   const [highlightedComponents, setHighlightedComponents] = useState<string[]>([]);
@@ -265,7 +265,7 @@ function Flow() {
               memory_node: MemoryNode,
               tool_node: ToolNode
             }}
-            style={{ backgroundColor: '#ffffff' }}
+            style={{ backgroundColor: '#f9f9f9' }}
           >
             <Controls />
             <MiniMap />
@@ -310,7 +310,7 @@ function Flow() {
               memory_node: MemoryNode,
               tool_node: ToolNode
             }}
-            style={{ backgroundColor: '#ffffff' }}
+            style={{ backgroundColor: '#f9f9f9' }}
           >
             <Controls />
             <MiniMap />

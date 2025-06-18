@@ -294,6 +294,7 @@ class TraceGraph:
         """
             Generate the final graph structure
         """
+        print("Generating basic graph...")
         basic_graph = {}
         basic_graph = self.generate_basic_graph()
 
