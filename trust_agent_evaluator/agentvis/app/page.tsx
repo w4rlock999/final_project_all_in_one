@@ -44,6 +44,25 @@ function Flow() {
   const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Default width for the left panel
   const [isDragging, setIsDragging] = useState(false);
   const [highlightedComponents, setHighlightedComponents] = useState<string[]>([]);
+  const [showInputComponents, setShowInputComponents] = useState(true); // Toggle between input and output components
+
+  // Function to update highlighted components based on current toggle state and selected node
+  const updateHighlightedComponents = useCallback(() => {
+    if (selectedNode && selectedNode.type === 'llm_call_node') {
+      if (showInputComponents) {
+        const inputComponents = (selectedNode.data.input_components as string[]) || [];
+        setHighlightedComponents(inputComponents);
+      } else {
+        const outputComponents = (selectedNode.data.output_components as string[]) || [];
+        setHighlightedComponents(outputComponents);
+      }
+    }
+  }, [selectedNode, showInputComponents]);
+
+  // Update highlighted components when toggle state changes
+  useEffect(() => {
+    updateHighlightedComponents();
+  }, [updateHighlightedComponents]);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -162,14 +181,16 @@ function Flow() {
 
         const componentEdges_ = componentEdges.map(edge => ({
           ...edge,
+          animated: highlightedComponents.length > 0 ? (highlightedComponents.includes(edge.source) && highlightedComponents.includes(edge.target)) ? true : false : false,
           style: {
             ...edge.style,
             opacity: highlightedComponents.length > 0 ? (highlightedComponents.includes(edge.source) && highlightedComponents.includes(edge.target)) ? 1 : 0.2 : 1,
             stroke: highlightedComponents.length > 0 ? (highlightedComponents.includes(edge.source) && highlightedComponents.includes(edge.target)) ? '#0000FF' : '#AFAFAF' : '#AFAFAF',
             strokeWidth: highlightedComponents.length > 0 ? (highlightedComponents.includes(edge.source) && highlightedComponents.includes(edge.target)) ? 2 : 1 : 1,
-            transition: 'stroke 0.3s ease'
+            transition: 'stroke 0.3s ease',
+            animationDirection: showInputComponents ? 'reverse' : 'normal'
           },
-          animated: highlightedComponents.length > 0 ? (highlightedComponents.includes(edge.source) && highlightedComponents.includes(edge.target)) ? true : false : false,
+          
         }));
         
         setComponentNodes(componentNodes_);
@@ -179,12 +200,17 @@ function Flow() {
       }
     };
     loadInitialData();
-  }, [highlightedComponents]);
+  }, [highlightedComponents, showInputComponents]);
 
   const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
     if (node.type === 'llm_call_node') {
-      const inputComponents = (node.data.input_components as string[]) || [];
-      setHighlightedComponents(inputComponents);
+      if (showInputComponents) {
+        const inputComponents = (node.data.input_components as string[]) || [];
+        setHighlightedComponents(inputComponents);
+      } else {
+        const outputComponents = (node.data.output_components as string[]) || [];
+        setHighlightedComponents(outputComponents);
+      }
       setSelectedNode(node);
     } else if (node.type === 'agent_node') {
       setHighlightedComponents([]);
@@ -200,14 +226,22 @@ function Flow() {
       setHighlightedComponents([]);
       setSelectedNode(null);
     }
-  }, []);
+  }, [showInputComponents]);
 
-  const onEdgeClick = useCallback(() => {
+  const onEdgeClick = useCallback((event: React.MouseEvent) => {
+    // Don't dehighlight if clicking on the toggle button
+    if ((event.target as Element)?.closest('.component-toggle')) {
+      return;
+    }
     setHighlightedComponents([]);
     setSelectedNode(null);
   }, []);
 
-  const onPaneClick = useCallback(() => {
+  const onPaneClick = useCallback((event: React.MouseEvent) => {
+    // Don't dehighlight if clicking on the toggle button
+    if ((event.target as Element)?.closest('.component-toggle')) {
+      return;
+    }
     setHighlightedComponents([]);
     setSelectedNode(null);
   }, []);
@@ -270,6 +304,31 @@ function Flow() {
             <Controls />
             <MiniMap />
             <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+            <Panel position="top-left" className="component-toggle">
+              <button
+                onClick={() => setShowInputComponents(!showInputComponents)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: showInputComponents ? '#007bff' : '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  transition: 'background-color 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = showInputComponents ? '#0056b3' : '#5a6268';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = showInputComponents ? '#007bff' : '#6c757d';
+                }}
+              >
+                {showInputComponents ? 'Input Components' : 'Output Components'}
+              </button>
+            </Panel>
           </ReactFlow>
         </div>
       </ReactFlowProvider>
