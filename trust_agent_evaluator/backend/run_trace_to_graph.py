@@ -19,12 +19,6 @@ def main():
     detailed_graph = trace_graph.generate_graph()
     
 
-
-
-
-
-
-    
     # Convert to ReactFlow format
     reactflow_graph = trace_graph.convert_graph_to_reactflow()
     

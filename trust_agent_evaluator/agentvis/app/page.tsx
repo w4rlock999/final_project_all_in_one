@@ -26,6 +26,7 @@ import genericLLMNode from './genericLLMNode';
 import AgentNode from './agentNode';
 import MemoryNode from './memoryNode';
 import ToolNode from './toolNode';
+import HumanInputNode from './humanInputNode';
 import RightPanel from './RightPanel';
 
 const flowKey = 'example-flow';
@@ -33,9 +34,18 @@ const flowKey = 'example-flow';
 let id = 3;
 const getId = () => `${id++}`;
 
+interface ActionNodeData extends Record<string, unknown> {
+  label: string;
+  agent_id: string;
+  agent_name: string;
+  jb_asr: string;
+  input_components: string[];
+  output_components: string[];
+}
+
 function Flow() {
-  const [processNodes, setProcessNodes, onProcessNodesChange] = useNodesState<Node<Record<string, unknown>, string>>([]);
-  const [processEdges, setProcessEdges, onProcessEdgesChange] = useEdgesState<Edge<Record<string, unknown>>>([]);
+  const [actionNodes, setActionNodes, onActionNodesChange] = useNodesState<Node<Record<string, unknown>, string>>([]);
+  const [actionEdges, setActionEdges, onActionEdgesChange] = useEdgesState<Edge<Record<string, unknown>>>([]);
   
   const [componentNodes, setComponentNodes, onComponentNodesChange] = useNodesState<Node<Record<string, unknown>, string>>([]);
   const [componentEdges, setComponentEdges, onComponentEdgesChange] = useEdgesState<Edge<Record<string, unknown>>>([]);
@@ -49,12 +59,15 @@ function Flow() {
   // Function to update highlighted components based on current toggle state and selected node
   const updateHighlightedComponents = useCallback(() => {
     if (selectedNode && selectedNode.type === 'llm_call_node') {
+      const nodeData = selectedNode.data as unknown as ActionNodeData;
       if (showInputComponents) {
-        const inputComponents = (selectedNode.data.input_components as string[]) || [];
-        setHighlightedComponents(inputComponents);
+        const inputComponents = nodeData.input_components || [];
+        const agentId = nodeData.agent_id;
+        setHighlightedComponents([...inputComponents, agentId]);
       } else {
-        const outputComponents = (selectedNode.data.output_components as string[]) || [];
-        setHighlightedComponents(outputComponents);
+        const outputComponents = nodeData.output_components || [];
+        const agentId = nodeData.agent_id;
+        setHighlightedComponents([...outputComponents, agentId]);
       }
     }
   }, [selectedNode, showInputComponents]);
@@ -69,10 +82,17 @@ function Flow() {
       try {
         const response = await fetch('/initial_flow.json');
         const data = await response.json();
-        // Combine nodes and edges from both component and process
-        const processNodes = data.process.nodes
+        // Combine nodes and edges from both component and action
+        const actionNodes = data.action.nodes.map((node: Node<Record<string, unknown>, string>) => ({
+          ...node,
+          style: {
+            ...node.style,
+            opacity: selectedNode != null ? (((node.id) === selectedNode.id) ? 1 : 0.3) : 1,
+            transition: 'opacity 0.3s ease',
+          },
+        }));
 
-        const componentNodes = data.component.nodes.map(node => ({
+        const componentNodes = data.component.nodes.map((node: Node<Record<string, unknown>, string>) => ({
           ...node,
           style: {
             ...node.style,
@@ -80,14 +100,20 @@ function Flow() {
             transition: 'opacity 0.3s ease',
           },
         }));
-
-        // const allNodes = [...processNodes, ...componentNodes];
         
-        const processEdges = data.process.edges.map(edge => ({
+        const actionEdges = data.action.edges.map((edge: Edge<Record<string, unknown>>) => ({
           ...edge,
           animated: selectedNode != null ? (((edge.source) === selectedNode.data.label) ? true : false) : false,
+          style: {
+            ...edge.style,
+            stroke: selectedNode != null && edge.source === selectedNode.data.label ? '#0000FF' : '#AFAFAF',
+            strokeWidth: selectedNode != null && edge.source === selectedNode.data.label ? 2 : 1,
+            opacity: selectedNode ? (edge.source === selectedNode.data.label ? 1 : 0.3) : 1,
+            transition: 'stroke 0.3s ease'
+          },
         }));
-        const componentEdges = data.component.edges.map(edge => ({
+
+        const componentEdges = data.component.edges.map((edge: Edge<Record<string, unknown>>) => ({
           ...edge,
           style: {
             ...edge.style,
@@ -98,11 +124,9 @@ function Flow() {
           },
           animated: highlightedComponents.length > 0 ? (highlightedComponents.includes(edge.source) && highlightedComponents.includes(edge.target)) ? true : false : false,
         }));
-
-        // const allEdges = [...componentEdges, ...processEdges];
         
-        setProcessNodes(processNodes);
-        setProcessEdges(processEdges);
+        setActionNodes(actionNodes);
+        setActionEdges(actionEdges);
         setComponentNodes(componentNodes);
         setComponentEdges(componentEdges);
       } catch (error) {
@@ -117,15 +141,15 @@ function Flow() {
     const loadInitialData = async () => {
       try {
         // Get target nodes of edges that have selectedNode as source
-        const targetNodeIds = processEdges
-          .filter(edge => edge.source === selectedNode?.id)
+        const targetNodeIds = actionEdges
+          .filter(edge => edge.source === selectedNode?.data.label)
           .map(edge => edge.target);
 
         // Create set of active nodes (selected node + target nodes)
         const activeNodeIds = new Set([selectedNode?.id, ...targetNodeIds]);
 
-        // Update process nodes with opacity changes
-        setProcessNodes(nodes => nodes.map(node => ({
+        // Update action nodes with opacity changes
+        setActionNodes(nodes => nodes.map(node => ({
           ...node,
           style: {
             ...node.style,
@@ -134,29 +158,19 @@ function Flow() {
           },
         })));
 
-        // Update process edges with opacity changes
-        // setProcessEdges(edges => edges.map(edge => ({
-        //   ...edge,
-        //   style: {
-        //     ...edge.style,
-        //     stroke: selectedNode != null && edge.source === selectedNode.id ? '#0000FF' : '#AFAFAF',
-        //     strokeWidth: selectedNode != null && edge.source === selectedNode.id ? 2 : 1,
-        //     opacity: selectedNode ? (edge.source === selectedNode.id ? 1 : 0.3) : 1,
-        //     transition: 'all 0.3s ease'
-        //   },
-        // })));
-        const processEdges_ = processEdges.map(edge => ({
+        const actionEdges_ = actionEdges.map(edge => ({
           ...edge,
+          animated: selectedNode != null ? (((edge.source) === selectedNode.data.label) ? true : false) : false,
           style: {
             ...edge.style,
-            stroke: selectedNode != null && edge.source === selectedNode.id ? '#0000FF' : '#AFAFAF',
-            strokeWidth: selectedNode != null && edge.source === selectedNode.id ? 2 : 1,
-            opacity: selectedNode ? (edge.source === selectedNode.id ? 1 : 0.3) : 1,
+            stroke: selectedNode != null && edge.source === selectedNode.data.label ? '#0000FF' : '#AFAFAF',
+            strokeWidth: selectedNode != null && edge.source === selectedNode.data.label ? 2 : 1,
+            opacity: selectedNode ? (edge.source === selectedNode.data.label ? 1 : 0.3) : 1,
             transition: 'stroke 0.3s ease'
           },
         }));
 
-        setProcessEdges(processEdges_);
+        setActionEdges(actionEdges_);
 
       } catch (error) {
         console.error('Failed to load initial flow data:', error);
@@ -204,12 +218,15 @@ function Flow() {
 
   const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
     if (node.type === 'llm_call_node') {
+      const nodeData = node.data as unknown as ActionNodeData;
       if (showInputComponents) {
-        const inputComponents = (node.data.input_components as string[]) || [];
-        setHighlightedComponents(inputComponents);
+        const inputComponents = nodeData.input_components || [];
+        const agentId = nodeData.agent_id;
+        setHighlightedComponents([...inputComponents, agentId]);
       } else {
-        const outputComponents = (node.data.output_components as string[]) || [];
-        setHighlightedComponents(outputComponents);
+        const outputComponents = nodeData.output_components || [];
+        const agentId = nodeData.agent_id;
+        setHighlightedComponents([...outputComponents, agentId]);
       }
       setSelectedNode(node);
     } else if (node.type === 'agent_node') {
@@ -281,11 +298,11 @@ function Flow() {
             nodes={[...componentNodes]}
             edges={[...componentEdges]}
             onNodesChange={(changes) => {
-              onProcessNodesChange(changes);
+              onActionNodesChange(changes);
               onComponentNodesChange(changes);
             }}
             onEdgesChange={(changes) => {
-              onProcessEdgesChange(changes);
+              onActionEdgesChange(changes);
               onComponentEdgesChange(changes);
             }}
             onNodeClick={onNodeClick}
@@ -297,7 +314,8 @@ function Flow() {
               llm_call_node: genericLLMNode,
               agent_node: AgentNode,
               memory_node: MemoryNode,
-              tool_node: ToolNode
+              tool_node: ToolNode,
+              human_input_node: HumanInputNode
             }}
             style={{ backgroundColor: '#f9f9f9' }}
           >
@@ -309,8 +327,8 @@ function Flow() {
                 onClick={() => setShowInputComponents(!showInputComponents)}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: showInputComponents ? '#007bff' : '#6c757d',
-                  color: 'white',
+                  backgroundColor: showInputComponents ? '#007bff' : '#ffc107',
+                  color: showInputComponents ? 'white' : 'black',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -320,10 +338,10 @@ function Flow() {
                   transition: 'background-color 0.3s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = showInputComponents ? '#0056b3' : '#5a6268';
+                  e.currentTarget.style.backgroundColor = showInputComponents ? '#0056b3' : '#e6ad06';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = showInputComponents ? '#007bff' : '#6c757d';
+                  e.currentTarget.style.backgroundColor = showInputComponents ? '#007bff' : '#ffc107';
                 }}
               >
                 {showInputComponents ? 'Input Components' : 'Output Components'}
@@ -348,14 +366,14 @@ function Flow() {
       <ReactFlowProvider>
         <div style={{ width: `${100 - leftPanelWidth - rightPanelWidth}%`, height: '100%' }}>
           <ReactFlow
-            nodes={[...processNodes]}
-            edges={[...processEdges]}
+            nodes={[...actionNodes]}
+            edges={[...actionEdges]}
             onNodesChange={(changes) => {
-              onProcessNodesChange(changes);
+              onActionNodesChange(changes);
               onComponentNodesChange(changes);
             }}
             onEdgesChange={(changes) => {
-              onProcessEdgesChange(changes);
+              onActionEdgesChange(changes);
               onComponentEdgesChange(changes);
             }}
             onNodeClick={onNodeClick}
@@ -367,7 +385,8 @@ function Flow() {
               llm_call_node: genericLLMNode,
               agent_node: AgentNode,
               memory_node: MemoryNode,
-              tool_node: ToolNode
+              tool_node: ToolNode,
+              human_input_node: HumanInputNode
             }}
             style={{ backgroundColor: '#f9f9f9' }}
           >

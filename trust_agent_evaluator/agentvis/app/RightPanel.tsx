@@ -7,18 +7,31 @@ interface RightPanelProps {
   setWidth: (w: number) => void;
 }
 
-interface ProcessInfo {
+interface Message {
+  content: string;
+  type: string;
+  name?: string;
+  tool_calls?: any[];
+}
+
+interface ActionInfo {
   id: string;
-  input: string;
-  output: string;
-  agent_index: number;
+  input: Message[];
+  output: {
+    generations: Array<Array<{
+      message: {
+        content: string;
+        additional_kwargs: {
+          tool_calls?: any[];
+        };
+      };
+    }>>;
+  };
+  agent_id: string;
   agent_name: string;
-  tool_in_input: number[];
-  tool_in_output: number[];
-  memory_in_input: number[];
-  memory_in_output: number[];
-  dependency_nodes: string[];
-  jailbreak_success_rate: number;
+  input_components: string[];
+  output_components: string[];
+  jb_asr: string;
 }
 
 interface AgentInfo {
@@ -27,25 +40,21 @@ interface AgentInfo {
   goal: string;
   model: string;
   id: string;
+  risk: number;
 }
 
 interface MemoryInfo {
   id: string;
-  value: string; // This is a JSON string that needs to be parsed
-}
-
-interface ParsedMemoryValue {
-  output: {
-    thought: string;
-    output: string;
-    text: string;
-  };
+  memory_content: string;
+  memory_index: number;
+  risk: number;
 }
 
 interface ToolInfo {
-  name: string;
+  tool_name: string;
   description: string;
   id: string;
+  risk: number;
 }
 
 const MIN_WIDTH = 20; // Percentage
@@ -53,38 +62,96 @@ const MAX_WIDTH = 40; // Percentage
 
 const RightPanel: React.FC<RightPanelProps> = ({ selectedNode, width, setWidth }) => {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [processInfo, setProcessInfo] = useState<ProcessInfo | null>(null);
+  const [actionInfo, setActionInfo] = useState<ActionInfo | null>(null);
   const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null);
   const [memoryInfo, setMemoryInfo] = useState<MemoryInfo | null>(null);
-  const [parsedMemoryValue, setParsedMemoryValue] = useState<ParsedMemoryValue | null>(null);
   const [toolInfo, setToolInfo] = useState<ToolInfo | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [componentMap, setComponentMap] = useState<Record<string, any>>({});
 
   useEffect(() => {
     const loadInfo = async () => {
       if (selectedNode?.type === 'llm_call_node') {
         try {
-          const response = await fetch('/process_info.json');
-          const data = await response.json();
-          const process = data.process.find((p: ProcessInfo) => p.id === selectedNode.id);
-          setProcessInfo(process || null);
+          // Get graph structure from initial_flow.json
+          const graphResponse = await fetch('/initial_flow.json');
+          const graphData = await graphResponse.json();
+          
+          // Build component map from graph data
+          const newComponentMap: Record<string, any> = {};
+          try {
+            if (graphData?.component?.nodes) {
+              graphData.component.nodes.forEach((node: any) => {
+                if (!node || !node.type || !node.data) return;
+                
+                if (node.type === 'agent_node' && node.data.agent_name) {
+                  newComponentMap[node.id] = { type: 'agent', name: node.data.agent_name };
+                } else if (node.type === 'memory_node' && node.data.memory_content) {
+                  newComponentMap[node.id] = { 
+                    type: 'memory', 
+                    name: node.data.memory_content.substring(0, 30) + (node.data.memory_content.length > 30 ? '...' : '')
+                  };
+                } else if (node.type === 'tool_node' && node.data.tool_name) {
+                  newComponentMap[node.id] = { type: 'tool', name: node.data.tool_name };
+                }
+              });
+            }
+          } catch (error) {
+            console.warn('Error building component map:', error);
+          }
+          setComponentMap(newComponentMap);
+
+          // Get action details from detailed_graph_multi_trace.json
+          const detailsResponse = await fetch('/detailed_graph_multi_trace.json');
+          const detailsData = await detailsResponse.json();
+          
+          try {
+            // Find the action in the graph data for basic info
+            const graphAction = graphData?.action?.nodes?.find((a: any) => a?.id === selectedNode?.id);
+            
+            if (graphAction?.data) {
+              // Find detailed action data
+              const detailedAction = detailsData?.actions?.flat()?.find((a: any) => a?.label === graphAction.data.label);
+              
+              setActionInfo({
+                id: graphAction.id,
+                input: detailedAction?.input || [],
+                output: detailedAction?.output || { generations: [] },
+                agent_id: graphAction.data.agent_id,
+                agent_name: graphAction.data.agent_name,
+                input_components: graphAction.data.input_components || [],
+                output_components: graphAction.data.output_components || [],
+                jb_asr: graphAction.data.jb_asr || '0'
+              });
+            }
+          } catch (error) {
+            console.warn('Error processing action data:', error);
+          }
+          
           setAgentInfo(null);
           setMemoryInfo(null);
-          setParsedMemoryValue(null);
           setToolInfo(null);
         } catch (error) {
-          console.error('Failed to load process info:', error);
-          setProcessInfo(null);
+          console.error('Failed to load action info:', error);
+          setActionInfo(null);
         }
       } else if (selectedNode?.type === 'agent_node') {
         try {
-          const response = await fetch('/component_info.json');
+          const response = await fetch('/detailed_graph_multi_trace.json');
           const data = await response.json();
-          const agent = data.agent.find((a: AgentInfo) => a.id === selectedNode.id);
-          setAgentInfo(agent || null);
-          setProcessInfo(null);
+          const agent = data.component.nodes.find((a: any) => a.id === selectedNode.id && a.type === 'agent_node');
+          if (agent) {
+            setAgentInfo({
+              id: agent.id,
+              name: agent.data.agent_name,
+              backstory: agent.data.backstory,
+              goal: agent.data.goal,
+              model: agent.data.model || '',
+              risk: agent.data.risk || 0
+            });
+          }
+          setActionInfo(null);
           setMemoryInfo(null);
-          setParsedMemoryValue(null);
           setToolInfo(null);
         } catch (error) {
           console.error('Failed to load agent info:', error);
@@ -92,46 +159,48 @@ const RightPanel: React.FC<RightPanelProps> = ({ selectedNode, width, setWidth }
         }
       } else if (selectedNode?.type === 'memory_node') {
         try {
-          const response = await fetch('/component_info.json');
+          const response = await fetch('/detailed_graph_multi_trace.json');
           const data = await response.json();
-          const memory = data.memory.find((m: MemoryInfo) => m.id === selectedNode.id);
-          setMemoryInfo(memory || null);
-          if (memory?.value) {
-            try {
-              const parsed = JSON.parse(memory.value) as ParsedMemoryValue;
-              setParsedMemoryValue(parsed);
-            } catch (error) {
-              console.error('Failed to parse memory value:', error);
-              setParsedMemoryValue(null);
-            }
+          const memory = data.component.nodes.find((m: any) => m.id === selectedNode.id && m.type === 'memory_node');
+          if (memory) {
+            setMemoryInfo({
+              id: memory.id,
+              memory_content: memory.data.memory_content,
+              memory_index: memory.data.memory_index,
+              risk: memory.data.risk || 0
+            });
           }
-          setProcessInfo(null);
+          setActionInfo(null);
           setAgentInfo(null);
           setToolInfo(null);
         } catch (error) {
           console.error('Failed to load memory info:', error);
           setMemoryInfo(null);
-          setParsedMemoryValue(null);
         }
       } else if (selectedNode?.type === 'tool_node') {
         try {
-          const response = await fetch('/component_info.json');
+          const response = await fetch('/detailed_graph_multi_trace.json');
           const data = await response.json();
-          const tool = data.tool.find((t: ToolInfo) => t.id === selectedNode.id);
-          setToolInfo(tool || null);
-          setProcessInfo(null);
+          const tool = data.component.nodes.find((t: any) => t.id === selectedNode.id && t.type === 'tool_node');
+          if (tool) {
+            setToolInfo({
+              id: tool.id,
+              tool_name: tool.data.tool_name,
+              description: tool.data.description,
+              risk: tool.data.risk || 0
+            });
+          }
+          setActionInfo(null);
           setAgentInfo(null);
           setMemoryInfo(null);
-          setParsedMemoryValue(null);
         } catch (error) {
           console.error('Failed to load tool info:', error);
           setToolInfo(null);
         }
       } else {
-        setProcessInfo(null);
+        setActionInfo(null);
         setAgentInfo(null);
         setMemoryInfo(null);
-        setParsedMemoryValue(null);
         setToolInfo(null);
       }
     };
@@ -185,44 +254,117 @@ const RightPanel: React.FC<RightPanelProps> = ({ selectedNode, width, setWidth }
       <div className="right-panel-drag-handle" onMouseDown={onMouseDown} role="presentation" />
       <div className="rp-header">{selectedNode ? selectedNode.data.label : ''}</div>
       
-      {processInfo && (
+      {actionInfo && (
         <>
           <div className="rp-section">
             <div className="rp-label">Agent Name:</div>
-            <div className="rp-value">{processInfo.agent_name}</div>
-            <div className="rp-label">Agent Index:</div>
-            <div className="rp-value">{processInfo.agent_index}</div>
+            <div className="rp-value">{actionInfo.agent_name}</div>
+            <div className="rp-label">Agent ID:</div>
+            <div className="rp-value">{actionInfo.agent_id}</div>
             <div className="rp-label">Jailbreak Success Rate:</div>
-            <div className="rp-value">{(processInfo.jailbreak_success_rate * 100).toFixed(2)}%</div>
+            <div className="rp-value">{(parseFloat(actionInfo.jb_asr) * 100).toFixed(2)}%</div>
           </div>
 
           <div className="rp-section">
-            <div className="rp-label">Input:</div>
-            <div className="rp-box" style={{ minHeight: 100 }}>
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                {formatJsonString(processInfo.input)}
-              </pre>
+            <div className="rp-label">Components Used:</div>
+            <div className="rp-box">
+              <div className="rp-components-section">
+                <div className="rp-components-header">Input Components:</div>
+                {actionInfo.input_components.map((componentId: string, index: number) => {
+                  const component = componentMap[componentId];
+                  return component ? (
+                    <div key={index} className="rp-component-item">
+                      <span className="rp-component-type">{component.type}:</span>
+                      <span className="rp-component-name">{component.name}</span>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+              <div className="rp-components-section">
+                <div className="rp-components-header">Output Components:</div>
+                {actionInfo.output_components.map((componentId: string, index: number) => {
+                  const component = componentMap[componentId];
+                  return component ? (
+                    <div key={index} className="rp-component-item">
+                      <span className="rp-component-type">{component.type}:</span>
+                      <span className="rp-component-name">{component.name}</span>
+                    </div>
+                  ) : null;
+                })}
+              </div>
             </div>
+
+            <div className="rp-label" style={{ marginTop: '20px' }}>Input Messages:</div>
+            <div className="rp-box" style={{ minHeight: 100 }}>
+              {actionInfo.input.map((message: Message, index: number) => (
+                <div key={index} className="rp-message-item">
+                  <div className="rp-message-type">{message.type}</div>
+                  <div className="rp-message-content">
+                    {message.content || (message.type === 'ai' && 
+                      (message.tool_calls?.length > 0 || message.additional_kwargs?.tool_calls?.length > 0)
+                      ? `Calling tool: ${message.tool_calls?.[0]?.name || message.additional_kwargs?.tool_calls?.[0]?.function?.name}`
+                      : message.content)
+                    }
+                  </div>
+                  {(message.tool_calls || message.additional_kwargs?.tool_calls) && (
+                    <div className="rp-tool-calls">
+                      {(message.tool_calls || message.additional_kwargs?.tool_calls)?.map((call, idx) => {
+                        // Get tool name and args based on message type
+                        const toolName = call?.name || call?.function?.name;
+                        const toolArgs = call?.args || call?.function?.arguments;
+                        
+                        return (
+                          <div key={idx} className="rp-tool-call">
+                            <span className="rp-tool-name">{toolName}</span>
+                            {toolArgs && Object.keys(toolArgs).length > 0 && (
+                              <pre className="rp-tool-args">
+                                {JSON.stringify(toolArgs, null, 2)}
+                              </pre>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
             <div className="rp-arrow">▼</div>
-            <div className="rp-label">Output:</div>
-            <div className="rp-box" style={{ minHeight: 100 }}>
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                {formatJsonString(processInfo.output)}
-              </pre>
-            </div>
-          </div>
 
-          <div className="rp-section">
-            <div className="rp-label">Tools in Input:</div>
-            <div className="rp-value">{processInfo.tool_in_input.join(', ') || 'None'}</div>
-            <div className="rp-label">Tools in Output:</div>
-            <div className="rp-value">{processInfo.tool_in_output.join(', ') || 'None'}</div>
-            <div className="rp-label">Memory in Input:</div>
-            <div className="rp-value">{processInfo.memory_in_input.join(', ') || 'None'}</div>
-            <div className="rp-label">Memory in Output:</div>
-            <div className="rp-value">{processInfo.memory_in_output.join(', ') || 'None'}</div>
-            <div className="rp-label">Dependency Nodes:</div>
-            <div className="rp-value">{processInfo.dependency_nodes.join(', ') || 'None'}</div>
+            <div className="rp-label">Output Message:</div>
+            <div className="rp-box" style={{ minHeight: 100 }}>
+              {actionInfo.output.generations[0]?.[0]?.message && (
+                <div className="rp-message-item">
+                  <div className="rp-message-content">
+                    {actionInfo.output.generations[0][0].message.content || 
+                     (actionInfo.output.generations[0][0].message.additional_kwargs?.tool_calls?.length > 0
+                      ? `Calling tool: ${actionInfo.output.generations[0][0].message.additional_kwargs.tool_calls[0]?.function?.name}`
+                      : actionInfo.output.generations[0][0].message.content)
+                    }
+                  </div>
+                  {actionInfo.output.generations[0][0].message.additional_kwargs?.tool_calls && (
+                    <div className="rp-tool-calls">
+                      {actionInfo.output.generations[0][0].message.additional_kwargs?.tool_calls?.map((call: any, idx: number) => {
+                        const toolName = call?.function?.name;
+                        const toolArgs = call?.function?.arguments;
+                        
+                        return (
+                          <div key={idx} className="rp-tool-call">
+                            <span className="rp-tool-name">{toolName}</span>
+                            {toolArgs && Object.keys(toolArgs).length > 0 && (
+                              <pre className="rp-tool-args">
+                                {JSON.stringify(toolArgs, null, 2)}
+                              </pre>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
@@ -234,6 +376,8 @@ const RightPanel: React.FC<RightPanelProps> = ({ selectedNode, width, setWidth }
             <div className="rp-value">{agentInfo.name}</div>
             <div className="rp-label">Model:</div>
             <div className="rp-value">{agentInfo.model}</div>
+            <div className="rp-label">Risk Score:</div>
+            <div className="rp-value">{(agentInfo.risk * 100).toFixed(2)}%</div>
           </div>
 
           <div className="rp-section">
@@ -256,14 +400,18 @@ const RightPanel: React.FC<RightPanelProps> = ({ selectedNode, width, setWidth }
         </>
       )}
 
-      {parsedMemoryValue && (
+      {memoryInfo && (
         <div className="rp-section">
-          <div className="rp-label">Content:</div>
+          <div className="rp-label">Memory Content:</div>
           <div className="rp-box" style={{ minHeight: 100 }}>
             <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-              {parsedMemoryValue.output.output}
+              {memoryInfo.memory_content}
             </pre>
           </div>
+          <div className="rp-label">Memory Index:</div>
+          <div className="rp-value">{memoryInfo.memory_index}</div>
+          <div className="rp-label">Risk Score:</div>
+          <div className="rp-value">{(memoryInfo.risk * 100).toFixed(2)}%</div>
         </div>
       )}
 
@@ -271,7 +419,9 @@ const RightPanel: React.FC<RightPanelProps> = ({ selectedNode, width, setWidth }
         <>
           <div className="rp-section">
             <div className="rp-label">Name:</div>
-            <div className="rp-value">{toolInfo.name}</div>
+            <div className="rp-value">{toolInfo.tool_name}</div>
+            <div className="rp-label">Risk Score:</div>
+            <div className="rp-value">{(toolInfo.risk * 100).toFixed(2)}%</div>
           </div>
 
           <div className="rp-section">

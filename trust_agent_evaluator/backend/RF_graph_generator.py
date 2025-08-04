@@ -67,6 +67,11 @@ class ReactFlowGenerator:
                         f"agent_{node['agent_index']}",
                         *[f"memory_{idx}" for idx in node.get('memory_in_input', [])],
                         *[f"tool_{idx}" for idx in node.get('tool_in_input', [])]
+                    ],
+                    "output_components": [
+                        f"agent_{node['agent_index']}",
+                        *[f"memory_{idx}" for idx in node.get('memory_in_output', [])],
+                        *[f"tool_{idx}" for idx in node.get('tool_in_output', [])]
                     ]
                 },
                 "type": "llm_call_node"

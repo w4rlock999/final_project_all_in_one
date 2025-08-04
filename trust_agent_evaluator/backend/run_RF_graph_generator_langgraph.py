@@ -1,6 +1,6 @@
 import os
 import json
-from RF_graph_generator import ReactFlowGenerator
+from RF_graph_generator_LangGraph import ReactFlowGenerator
 
 def convert_graph_to_reactflow(input_path: str):
     """
@@ -12,17 +12,17 @@ def convert_graph_to_reactflow(input_path: str):
     # Initialize the converter with the input file
     converter = ReactFlowGenerator(graph_file=input_path)
     
-    # Generate process graph
-    process_nodes, process_edges = converter.generate_process_graph_RF()
+    # Generate action graph
+    action_nodes, action_edges = converter.generate_action_graph_RF()
     
     # Generate component graph
     component_nodes, component_edges = converter.generate_component_graph_RF()
     
     # Combine both graphs into a single structure
     reactflow_data = {
-        "process": {
-            "nodes": process_nodes,
-            "edges": process_edges,
+        "action": {
+            "nodes": action_nodes,
+            "edges": action_edges,
             "viewport": {
                 "x": 0,
                 "y": 0,
@@ -46,10 +46,10 @@ def convert_graph_to_reactflow(input_path: str):
         json.dump(reactflow_data, f, indent=2)
     
     print(f"ReactFlow graph data saved to: {output_path}")
-    print(f"Process graph: {len(process_nodes)} nodes and {len(process_edges)} edges")
+    print(f"Action graph: {len(action_nodes)} nodes and {len(action_edges)} edges")
     print(f"Component graph: {len(component_nodes)} nodes and {len(component_edges)} edges")
 
 if __name__ == "__main__":
     # Example usage
-    input_file = "./data/output/detailed_graph_with_jb.json"
+    input_file = "./langgraph_detailed_graph_dump.json"  # Updated to use the new langgraph format file
     convert_graph_to_reactflow(input_file) 
